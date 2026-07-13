@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en" class="dark h-full">
+<head>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        body { background: #0d0d0d; color: #ececec; }
+        .prose pre { background: #1a1a1a; padding: 1rem; border-radius: 8px; overflow-x: auto; }
+        .prose code { color: #f97316; }
+    </style>
+</head>
+<body class="h-full flex flex-col items-center bg-[#0d0d0d]">
+
+    <header class="w-full max-w-3xl p-6 flex justify-between items-center">
+        <div class="text-xl font-bold tracking-tight text-white">HackerAI</div>
+        <div class="text-xs text-neutral-500 font-mono">v3.0.reasoning</div>
+    </header>
+
+    <main id="chat-history" class="w-full max-w-3xl flex-1 overflow-y-auto p-6 space-y-8"></main>
+
+    <div class="w-full max-w-3xl p-6">
+        <div class="bg-[#1a1a1a] rounded-3xl p-4 border border-[#333] focus-within:border-[#555] transition">
+            <textarea id="user-input" placeholder="Initiate target assessment..." 
+                class="w-full bg-transparent border-0 focus:ring-0 outline-none h-12 max-h-40 resize-none"></textarea>
+            <div class="flex justify-end mt-2">
+                <button id="send-btn" class="bg-white text-black px-5 py-2 rounded-full font-bold hover:bg-neutral-200 transition">
+                    EXECUTE
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const input = document.getElementById('user-input');
+        const history = document.getElementById('chat-history');
+
+        document.getElementById('send-btn').onclick = async () => {
+            const text = input.value;
+            if(!text) return;
+            
+            history.innerHTML += `<div class="ml-auto bg-[#2f2f2f] px-5 py-3 rounded-2xl max-w-[80%]">${text}</div>`;
+            input.value = '';
+            
+            const res = await fetch('/api/chat', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ messages: [{ role: 'user', content: text }] })
+            });
+            const data = await res.json();
+            
+            const aiDiv = document.createElement('div');
+            aiDiv.className = 'prose max-w-none';
+            aiDiv.innerHTML = marked.parse(data.content);
+            history.appendChild(aiDiv);
+            history.scrollTop = history.scrollHeight;
+        };
+    </script>
+</body>
+</html>
